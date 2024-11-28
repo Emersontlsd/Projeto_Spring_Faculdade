@@ -1,0 +1,5 @@
+package com.projeto.ads.service;
+
+public class UserDetail {
+
+}
