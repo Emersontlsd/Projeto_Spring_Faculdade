@@ -1,0 +1,77 @@
+package com.projeto.ads.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.projeto.ads.model.Usuario;
+import com.projeto.ads.repository.RoleRepository;
+import com.projeto.ads.repository.UserRepository;
+	
+	@Controller
+	public class UsuarioController {
+		
+		@Autowired
+		private AuthenticationManager authenticationManager;
+		
+		@Autowired
+		private RoleRepository roleRepository;
+		
+		@Autowired
+		private UserRepository userRepository;
+		
+		@GetMapping("/login")
+		public ModelAndView login() {
+			ModelAndView mv = new ModelAndView();
+			mv.addObject("usuario", new Usuario());
+			mv.setViewName("Login/login");
+			return mv;
+		}// fim metodo login
+		
+		@GetMapping("/dashboard")
+		public ModelAndView dashboard(Authentication authentication) {
+			ModelAndView mv = new ModelAndView();
+			UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+			String username = userDetails.getUsername();
+			String papel = authentication.getAuthorities().iterator().next().getAuthority();
+			int atIndex = username.indexOf("@"); // retorna a posição do @ ou -1 caso nao encontr o @
+			String nomeUser = atIndex != -1 ? username.substring(0, atIndex) : username;
+			mv.addObject("usuario", nomeUser);
+			mv.addObject("papel", papel);
+			mv.setViewName("Login/index");
+			return mv;
+			
+		}// fim dashboard
+		
+		@GetMapping("/usuario/inserir")
+		public ModelAndView cadastro() {
+			ModelAndView mv = new ModelAndView();
+			mv.addObject("roles", roleRepository.findAll());
+			mv.addObject("usuario", new Usuario());
+			mv.setViewName("Login/cadastro");
+			return mv;
+		}// fim cadastro Get
+		
+		@PostMapping("/usuario/inserir")
+		public ModelAndView salvarUser(@ModelAttribute Usuario usuario,
+										@RequestParam("confirmPassword") String confirmPass,
+										@RequestParam("dataNasc") String dataNascimento,
+										@RequestParam("roleUser") String roller) {
+			ModelAndView mv = new ModelAndView();
+			if(!usuario.getPassword().equals(confirmPass)) {
+				mv.setViewName("Login/cadastro");
+				mv.addObject("error", "As senhas não correspondem!");
+				mv.addObject("roles", roleRepository.findAll());
+				return mv;
+			}// fim IF
+			return null;
+		}// fim salvar POST
+		
+}// fim class UsuarioController
